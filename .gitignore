@@ -1,0 +1,56 @@
+# ── Secretos y credenciales ───────────────────────────────────
+.env
+secrets/
+*credentials*.json
+*service-account*.json
+
+# ── Claude (memoria local del asistente) ──────────────────────
+.claude/
+
+# ── Python ────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# ── Bases de datos locales ────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ── Logs ──────────────────────────────────────────────────────
+*.log
+airflow/logs/
+logs/
+
+# ── Airflow ───────────────────────────────────────────────────
+airflow/plugins/
+
+# ── MLflow ────────────────────────────────────────────────────
+mlflow/mlruns/
+
+# ── Datos (no versionar datos crudos ni procesados) ───────────
+data/raw/
+data/processed/
+data/models/
+
+# ── IDEs y editores ───────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db

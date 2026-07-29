@@ -1,0 +1,16 @@
+# Data contract as code — EJEMPLO A COMPLETAR sobre SU tabla de consumo.
+version: 0.1.0
+dataset: <su_tabla_de_consumo>
+owner: data-platform@habi.co
+description: <qué representa, alineado al problema que definió>
+freshness:
+  max_age: 30d           # ejemplo; ajuste
+schema:
+  - name: <clave>
+    type: string
+    constraints: [not_null, unique]
+  - name: precio_normalizado
+    type: decimal
+    constraints: [not_null, ">= 0"]
+# TODO: tipos, rangos, catálogos válidos, política de versionado.
+# El contrato debe validarse en su pipeline y ROMPERLO si se incumple.

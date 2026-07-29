@@ -1,0 +1,169 @@
+# =============================================================
+#  Data Contract — ml_features_transacciones
+#  Versión: 1.0.0
+# =============================================================
+version: "1.0.0"
+
+dataset: pruebahabi.consumption.ml_features_transacciones
+
+owner: data-platform@habi.co
+
+description: >
+  Feature set completo para el modelo ML de prediccion de precios de
+  propiedades en Colombia. Contiene features categoricas, numericas y
+  derivadas (precio_por_m2, log_precio_cop, ratios) extraidas de
+  stg_transaccioneshabi, junto con la variable target precio_cop y la
+  asignacion de split (train/test). Es la fuente de verdad de la que
+  se materializan ml_train_transacciones y ml_test_transacciones.
+
+freshness:
+  timestamp_column: _feature_set_at
+  max_age: 7d
+
+row_count:
+  min: 1
+
+schema:
+
+  # ── Identificador ─────────────────────────────────────────
+  - name: propiedad_id
+    type: STRING
+    description: Identificador unico de la propiedad
+    constraints:
+      - not_null
+      - unique
+
+  # ── Features categoricas ──────────────────────────────────
+  - name: ciudad
+    type: STRING
+    description: "Ciudad normalizada. Sin lista cerrada: siempre pueden llegar ciudades nuevas."
+    constraints:
+      - not_null
+
+  - name: tipo
+    type: STRING
+    description: Tipo de inmueble en formato titulo (Apartamento, Casa, etc.).
+    constraints:
+      - not_null
+
+  - name: estado
+    type: STRING
+    description: Estado del inmueble en minusculas.
+    constraints:
+      - not_null
+      - allowed_values: [publicada, vendida, comprada, remodelacion]
+
+  # ── Features numericas base ───────────────────────────────
+  - name: area_m2
+    type: FLOAT64
+    description: Area en metros cuadrados.
+    constraints:
+      - min: 1.0
+      - max: 10000.0
+
+  - name: alcobas
+    type: INT64
+    description: Numero de alcobas.
+    constraints:
+      - not_null
+      - min: 0
+      - max: 20
+
+  - name: banos
+    type: INT64
+    description: Numero de banos.
+    constraints:
+      - not_null
+      - min: 0
+      - max: 20
+
+  - name: lat
+    type: FLOAT64
+    description: Latitud geografica (Colombia -4.2 a 12.5).
+    constraints:
+      - min: -4.3
+      - max: 13.0
+
+  - name: lon
+    type: FLOAT64
+    description: Longitud geografica (Colombia -81.8 a -66.8).
+    constraints:
+      - min: -81.8
+      - max: -66.8
+
+  # ── Features derivadas ────────────────────────────────────
+  - name: precio_por_m2
+    type: FLOAT64
+    description: "precio_cop / area_m2. NULL si area_m2 es NULL."
+    constraints:
+      - min: 0.0
+
+  - name: log_precio_cop
+    type: FLOAT64
+    description: "LN(precio_cop). Siempre >= 0 porque precio_cop >= 1."
+    constraints:
+      - not_null
+      - min: 0.0
+
+  - name: banos_por_alcoba
+    type: FLOAT64
+    description: "SAFE_DIVIDE(banos, alcobas). NULL si alcobas = 0."
+    constraints:
+      - min: 0.0
+
+  - name: area_por_alcoba
+    type: FLOAT64
+    description: "SAFE_DIVIDE(area_m2, alcobas). NULL si alcobas = 0."
+    constraints:
+      - min: 0.0
+
+  # ── Features temporales ───────────────────────────────────
+  - name: anio
+    type: INT64
+    description: Ano extraido de fecha.
+    constraints:
+      - not_null
+      - between: [2000, 2030]
+
+  - name: mes
+    type: INT64
+    description: Mes (1-12) extraido de fecha.
+    constraints:
+      - not_null
+      - between: [1, 12]
+
+  - name: trimestre
+    type: INT64
+    description: Trimestre (1-4) extraido de fecha.
+    constraints:
+      - not_null
+      - between: [1, 4]
+
+  - name: dia_semana
+    type: INT64
+    description: Dia de la semana (1=domingo ... 7=sabado) extraido de fecha.
+    constraints:
+      - not_null
+      - between: [1, 7]
+
+  - name: fecha
+    type: DATE
+    description: Fecha de la transaccion.
+    constraints:
+      - not_null
+
+  # ── Variable target ───────────────────────────────────────
+  - name: precio_cop
+    type: INT64
+    description: Precio en pesos colombianos (target del modelo ML).
+    constraints:
+      - not_null
+      - min: 10000000
+
+  # ── Split ML ──────────────────────────────────────────────
+  - name: split
+    type: STRING
+    description: Particion del dataset (train o test).
+    constraints:
+      - not_null
+      - allowed_values: [train, test]

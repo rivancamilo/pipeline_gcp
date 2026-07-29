@@ -1,0 +1,13 @@
+# Dependencias para Apache Airflow
+# Manipulacion de datos
+pandas==2.1.4
+numpy==1.26.3
+
+# GCP - BigQuery y Cloud Storage
+google-cloud-bigquery==3.17.2
+google-cloud-storage==2.14.0
+
+# Utilidades
+python-dotenv==1.0.0
+pyyaml==6.0.1
+requests==2.31.0

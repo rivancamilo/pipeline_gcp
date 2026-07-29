@@ -1,0 +1,140 @@
+# =============================================================
+#  Data Contract — ml_test_transacciones
+#  Versión: 1.0.0
+# =============================================================
+version: "1.0.0"
+
+dataset: pruebahabi.consumption.ml_test_transacciones
+
+owner: data-platform@habi.co
+
+description: >
+  Subset de evaluacion del modelo ML. Subconjunto de
+  ml_features_transacciones donde split = 'test' (~20% de los datos).
+  Se usa para evaluar el modelo de prediccion de precio_cop sobre datos
+  no vistos durante el entrenamiento. No incluye split ni _feature_set_at.
+
+row_count:
+  min: 1
+
+schema:
+
+  # ── Identificador ─────────────────────────────────────────
+  - name: propiedad_id
+    type: STRING
+    description: Identificador unico de la propiedad.
+    constraints:
+      - not_null
+      - unique
+
+  # ── Features categoricas ──────────────────────────────────
+  - name: ciudad
+    type: STRING
+    description: "Ciudad normalizada. Sin lista cerrada: siempre pueden llegar ciudades nuevas."
+    constraints:
+      - not_null
+
+  - name: tipo
+    type: STRING
+    constraints:
+      - not_null
+
+  - name: estado
+    type: STRING
+    description: Estado del inmueble en minusculas.
+    constraints:
+      - not_null
+      - allowed_values: [publicada, vendida, comprada, remodelacion]
+
+  # ── Features numericas base ───────────────────────────────
+  - name: area_m2
+    type: FLOAT64
+    constraints:
+      - min: 1.0
+      - max: 10000.0
+
+  - name: alcobas
+    type: INT64
+    constraints:
+      - not_null
+      - min: 0
+      - max: 20
+
+  - name: banos
+    type: INT64
+    constraints:
+      - not_null
+      - min: 0
+      - max: 20
+
+  - name: lat
+    type: FLOAT64
+    constraints:
+      - min: -4.3
+      - max: 13.0
+
+  - name: lon
+    type: FLOAT64
+    constraints:
+      - min: -81.8
+      - max: -66.8
+
+  # ── Features derivadas ────────────────────────────────────
+  - name: precio_por_m2
+    type: FLOAT64
+    constraints:
+      - min: 0.0
+
+  - name: log_precio_cop
+    type: FLOAT64
+    constraints:
+      - not_null
+      - min: 0.0
+
+  - name: banos_por_alcoba
+    type: FLOAT64
+    constraints:
+      - min: 0.0
+
+  - name: area_por_alcoba
+    type: FLOAT64
+    constraints:
+      - min: 0.0
+
+  # ── Features temporales ───────────────────────────────────
+  - name: anio
+    type: INT64
+    constraints:
+      - not_null
+      - between: [2000, 2030]
+
+  - name: mes
+    type: INT64
+    constraints:
+      - not_null
+      - between: [1, 12]
+
+  - name: trimestre
+    type: INT64
+    constraints:
+      - not_null
+      - between: [1, 4]
+
+  - name: dia_semana
+    type: INT64
+    constraints:
+      - not_null
+      - between: [1, 7]
+
+  - name: fecha
+    type: DATE
+    constraints:
+      - not_null
+
+  # ── Variable target ───────────────────────────────────────
+  - name: precio_cop
+    type: INT64
+    description: Precio en pesos colombianos (target del modelo ML).
+    constraints:
+      - not_null
+      - min: 10000000

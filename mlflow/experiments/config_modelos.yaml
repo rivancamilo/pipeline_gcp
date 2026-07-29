@@ -1,0 +1,76 @@
+# =============================================================
+#  Configuracion del experimento de prediccion de precios
+#  Proyecto: PrediCasa — pruebahabi
+# =============================================================
+
+experimento: "prediccion_precio_propiedades"
+target: "precio_cop"
+cv_folds: 5
+random_state: 42
+
+# ── BigQuery ──────────────────────────────────────────────────
+tablas_bigquery:
+  project: "pruebahabi"
+  features: "pruebahabi.consumption.ml_features_transacciones"
+  train:    "pruebahabi.consumption.ml_train_transacciones"
+  test:     "pruebahabi.consumption.ml_test_transacciones"
+
+# ── Google Cloud Storage ──────────────────────────────────────
+gcs:
+  bucket:          "habibucket"
+  prefijo_modelos: "modelos"
+
+# ── Features (excluye target, IDs y columnas con fuga de datos) ──
+precio_minimo_entrenamiento: 10000000 
+
+features:
+  numericas:
+    - area_m2
+    - alcobas
+    - banos
+    - lat
+    - lon
+    - banos_por_alcoba
+    - area_por_alcoba
+    - anio
+    - mes
+    - trimestre
+    - dia_semana
+  categoricas:
+    - ciudad
+    - tipo
+    - estado
+
+# ── Modelos y sus hiperparametros ─────────────────────────────
+modelos:
+
+  regresion_lineal:
+    params:
+      fit_intercept: true
+
+  arbol_decision:
+    params:
+      max_depth: 10
+      min_samples_split: 20
+      min_samples_leaf: 5
+      random_state: 42
+
+  random_forest:
+    params:
+      n_estimators: 100
+      max_depth: 15
+      min_samples_split: 10
+      min_samples_leaf: 3
+      n_jobs: -1
+      random_state: 42
+
+  xgboost:
+    params:
+      n_estimators: 200
+      max_depth: 6
+      learning_rate: 0.1
+      subsample: 0.8
+      colsample_bytree: 0.8
+      n_jobs: -1
+      random_state: 42
+      verbosity: 0

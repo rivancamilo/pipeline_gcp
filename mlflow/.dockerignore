@@ -1,0 +1,29 @@
+# ── Python cache ──────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ── MLflow runtime (montado como volumen nombrado) ────────────
+mlruns/
+
+# ── Modelos descargados (montados como bind mount) ────────────
+models/
+
+# ── Bases de datos locales ────────────────────────────────────
+*.db
+*.sqlite
+
+# ── IDEs y editores ───────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── OS ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Documentación (no necesaria en la imagen) ─────────────────
+*.md

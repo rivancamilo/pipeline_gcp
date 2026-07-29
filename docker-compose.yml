@@ -1,0 +1,151 @@
+networks:
+  predicasa-net:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  airflow-logs:
+  mlflow-data:
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  SERVICES
+# ──────────────────────────────────────────────────────────────────────────────
+services:
+
+  # ── MySQL (backend para Airflow) ────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: predicasa-mysql
+    restart: unless-stopped
+    networks:
+      - predicasa-net
+    volumes:
+      - mysql-data:/var/lib/mysql
+    env_file: .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-airflow}
+      MYSQL_USER: ${MYSQL_USER:-airflow}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-airflow}
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=${MYSQL_ROOT_PASSWORD:-rootpassword}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ── Airflow ─────────────────────────────────────────────────────────────────
+  airflow:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    container_name: predicasa-airflow
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - predicasa-net
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/scripts:/opt/airflow/scripts
+      - ./airflow/plugins:/opt/airflow/plugins
+      - airflow-logs:/opt/airflow/logs
+      - ./data:/opt/airflow/data
+      - ./contratos:/opt/airflow/contratos
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${GCP_CREDENTIALS_PATH}:/secrets/gcp-credentials.json:ro
+    env_file: .env
+    environment:
+      AIRFLOW__CORE__EXECUTOR: ${AIRFLOW__CORE__EXECUTOR:-LocalExecutor}
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY:-}
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW__DATABASE__SQL_ALCHEMY_CONN:-mysql+pymysql://airflow:airflow@mysql:3306/airflow}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY:-secret123}
+      PYTHONPATH: /opt/airflow/scripts
+      GOOGLE_APPLICATION_CREDENTIALS: /secrets/gcp-credentials.json
+      GCP_PROJECT: ${GCP_PROJECT:-pruebahabi}
+      GCS_BUCKET_NAME: ${GCS_BUCKET_NAME:-habibucket}
+      GCS_PREFIX_LANDING: ${GCS_PREFIX_LANDING:-landing}
+      GCS_PREFIX_PROCESSING: ${GCS_PREFIX_PROCESSING:-processing}
+      GCS_PREFIX_PROCESSED: ${GCS_PREFIX_PROCESSED:-processed}
+      BQ_DATASET_CONFIG: ${BQ_DATASET_CONFIG:-config}
+      BQ_DATASET_RAW: ${BQ_DATASET_RAW:-raw}
+      BQ_DATASET_STAGING: ${BQ_DATASET_STAGING:-staging}
+      BQ_DATASET_CONSUMPTION: ${BQ_DATASET_CONSUMPTION:-consumption}
+      BQ_FUENTE_RAW: ${BQ_FUENTE_RAW:-carga_raw}
+      BQ_FUENTE_STAGING: ${BQ_FUENTE_STAGING:-transformacion_raw_staging}
+      BQ_FUENTE_CONSUMPTION: ${BQ_FUENTE_CONSUMPTION:-consumption_ml}
+      ML_PCT_TRAIN: ${ML_PCT_TRAIN:-80}
+      CONTRATOS_PATH: /opt/airflow/contratos
+      SODA_APP_TOKEN: ${SODA_APP_TOKEN:-}
+    ports:
+      - "8080:8080"
+    entrypoint: ["/bin/bash", "/start-airflow.sh"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ── MLflow ──────────────────────────────────────────────────────────────────
+  mlflow:
+    build:
+      context: ./mlflow
+      dockerfile: Dockerfile
+    container_name: predicasa-mlflow
+    restart: unless-stopped
+    networks:
+      - predicasa-net
+    volumes:
+      - mlflow-data:/mlflow/mlruns
+      - ./mlflow/experiments:/mlflow/experiments
+      - ./mlflow/scripts:/mlflow/scripts
+      - ./data/models:/mlflow/models
+      - ${GCP_CREDENTIALS_PATH}:/secrets/gcp-credentials.json:ro
+    env_file: .env
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      GOOGLE_APPLICATION_CREDENTIALS: /secrets/gcp-credentials.json
+      GCP_PROJECT: ${GCP_PROJECT:-pruebahabi}
+      GCP_DATASET: ${GCP_DATASET:-config}
+    ports:
+      - "5000:5000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health', timeout=3)"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
+  # ── FastAPI (PrediCasa) ──────────────────────────────────────────────────────
+  fastapi:
+    build:
+      context: ./fastapi
+      dockerfile: Dockerfile
+    container_name: predicasa-fastapi
+    restart: unless-stopped
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    networks:
+      - predicasa-net
+    volumes:
+      - ./fastapi:/app
+      - ./data/models:/app/models
+      - ${GCP_CREDENTIALS_PATH}:/secrets/gcp-credentials.json:ro
+    env_file: .env
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      FASTAPI_ENV: ${FASTAPI_ENV:-development}
+      GOOGLE_APPLICATION_CREDENTIALS: /secrets/gcp-credentials.json
+      GCP_PROJECT: ${GCP_PROJECT:-pruebahabi}
+      GCP_DATASET: ${GCP_DATASET:-config}
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5

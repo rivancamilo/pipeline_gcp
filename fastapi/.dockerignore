@@ -1,0 +1,22 @@
+# ── Python cache ──────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ── Modelos descargados en runtime (montados como bind mount) ─
+models/
+
+# ── IDEs y editores ───────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── OS ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Documentación (no necesaria en la imagen) ─────────────────
+*.md
