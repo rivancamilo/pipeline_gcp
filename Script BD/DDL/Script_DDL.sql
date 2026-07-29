@@ -213,10 +213,7 @@ CREATE OR REPLACE TABLE `pruebahabi.raw.raw_macro_housing_index` (
 );
 
 
-
-
-
-
+---*****************************************************************************
 CREATE OR REPLACE TABLE `pruebahabi.raw.raw_usa_transactions` (
   transaction_id            STRING,
   authority_name            STRING,
@@ -229,3 +226,20 @@ CREATE OR REPLACE TABLE `pruebahabi.raw.raw_usa_transactions` (
   sale_price                STRING,
   _loaded_at                TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
 );
+
+
+---*****************************************************************************
+
+CREATE TABLE IF NOT EXISTS `pruebahabi.raw.raw_ny_surplus_real_estate_sales`(
+  property     STRING,
+  auction_date STRING,
+  minimum_bid  STRING,
+  final_bid    STRING,
+  status       STRING,
+  _loaded_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
+);
+
+
+ALTER TABLE `pruebahabi.config.parametros_ingesta`
+  ADD COLUMN IF NOT EXISTS url_api STRING,
+  ADD COLUMN IF NOT EXISTS limit_pagina INT64;
