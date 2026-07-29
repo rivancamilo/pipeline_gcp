@@ -13,6 +13,8 @@ CREATE OR REPLACE TABLE `pruebahabi.config.parametros_ingesta` (
   tabla_raw         STRING          OPTIONS(description="Tabla en capa raw"),
   tabla_staging     STRING          OPTIONS(description="Tabla en capa staging"),
   tipo_analisis     STRING          OPTIONS(description="ML, BI, REPORTING, etc.")
+  tipo_extraccion   STRING          OPTIONS(description="FULL o INCREMENTAL"),
+  columnas_llave    STRING          OPTIONS(description="Columnas que identifican un registro único, separadas por comas")
 );
 
 
@@ -81,7 +83,9 @@ OPTIONS(
 ---**********************************************************************************************
 ---**********************************************************************************************
 ---**********************************************************************************************
-CREATE OR REPLACE TABLE `pruebahabi.raw.raw_transaccioneshabi` (
+DROP TABLE IF EXISTS `pruebahabi.raw.raw_transaccioneshabi`;
+
+CREATE TABLE `pruebahabi.raw.raw_transaccioneshabi` (
   id           STRING,
   ciudad       STRING,
   tipo         STRING,
@@ -94,10 +98,12 @@ CREATE OR REPLACE TABLE `pruebahabi.raw.raw_transaccioneshabi` (
   fecha        STRING,
   estado       STRING,
   _loaded_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
-);
+)
+PARTITION BY DATE(_loaded_at)
+CLUSTER BY ciudad, tipo;
 
-
-CREATE or replace TABLE  `pruebahabi.staging.stg_transaccioneshabi` (
+DROP TABLE IF EXISTS `pruebahabi.staging.stg_transaccioneshabi`;
+CREATE TABLE `pruebahabi.staging.stg_transaccioneshabi` (
   id         STRING NOT NULL,
   ciudad     STRING,
   tipo       STRING,
@@ -113,6 +119,9 @@ CREATE or replace TABLE  `pruebahabi.staging.stg_transaccioneshabi` (
 )
 PARTITION BY fecha
 CLUSTER BY ciudad, tipo;
+
+
+
 
 
 CREATE OR REPLACE TABLE `pruebahabi.consumption.ml_features_transacciones` (

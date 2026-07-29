@@ -1,14 +1,14 @@
 INSERT INTO `pruebahabi.config.parametros_ingesta`
   (nombre_archivo, tipo_archivo, tabla_raw, tabla_staging, tipo_analisis)
 VALUES
-  ('co_transacciones_habi.csv', 'CSV', 'raw_transaccioneshabi',   'stg_transaccioneshabi',   'ML'),
-  ('macro_housing_index.xml',   'XML', 'raw_macro_housing_index', 'stg_macro_housing_index', 'ML');
+  ('co_transacciones_habi.csv', 'CSV', 'raw_transaccioneshabi',   'stg_transaccioneshabi',   'ML', 'INCREMENTAL', 'id'),
+  ('macro_housing_index.xml',   'XML', 'raw_macro_housing_index', 'stg_macro_housing_index', 'ML', 'FULL', 'id');
 
 
 INSERT INTO `pruebahabi.config.parametros_ingesta`
   (nombre_archivo, tipo_archivo, tabla_raw, tabla_staging, tipo_analisis)
 VALUES
-  ('usa_transactions_page_01.json', 'JSON', 'raw_usa_transactions', 'staging_usa_transactions', 'BI');
+  ('usa_transactions_page_01.json', 'JSON', 'raw_usa_transactions', 'staging_usa_transactions', 'BI', 'FULL', 'id');
 
 
 
