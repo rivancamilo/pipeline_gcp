@@ -1,5 +1,4 @@
 # ── Secretos y credenciales ───────────────────────────────────
-.env
 secrets/
 *credentials*.json
 *service-account*.json
