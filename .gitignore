@@ -3,9 +3,6 @@ secrets/
 *credentials*.json
 *service-account*.json
 
-# ── Claude (memoria local del asistente) ──────────────────────
-.claude/
-
 # ── Python ────────────────────────────────────────────────────
 __pycache__/
 *.pyc
