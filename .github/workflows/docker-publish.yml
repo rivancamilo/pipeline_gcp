@@ -1,0 +1,59 @@
+name: Test y publicar imágenes Docker
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # ────────────────────────────────────────────────────────────────
+  # 1. Tests: si fallan, no se construye ni se publica nada.
+  # ────────────────────────────────────────────────────────────────
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Instalar dependencias (incluye pytest y google-cloud-bigquery)
+        run: uv sync --all-groups
+
+      - name: Ejecutar pruebas unitarias
+        run: uv run pytest airflow/scripts/tests -v
+
+  # ────────────────────────────────────────────────────────────────
+  # 2. Build + push a Docker Hub (solo si los tests pasaron).
+  # ────────────────────────────────────────────────────────────────
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - nombre: airflow
+            contexto: ./airflow
+          - nombre: mlflow
+            contexto: ./mlflow
+          - nombre: fastapi
+            contexto: ./fastapi
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Login en Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build y push de ${{ matrix.nombre }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.contexto }}
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/pipeline-gcp-${{ matrix.nombre }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/pipeline-gcp-${{ matrix.nombre }}:${{ github.sha }}
