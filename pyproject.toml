@@ -1,0 +1,21 @@
+[project]
+name = "pipeline-gcp"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "ipykernel>=7.3.0",
+    "matplotlib>=3.11.1",
+    "numpy>=2.5.1",
+    "pandas>=3.0.5",
+    "requests>=2.34.2",
+    "scikit-learn>=1.9.0",
+    "xgboost>=3.3.0",
+]
+
+[dependency-groups]
+dev = [
+    "google-cloud-bigquery>=3.42.3",
+    "pytest>=9.1.1",
+]
